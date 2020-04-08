@@ -1,0 +1,15 @@
+{
+  "debug": true,
+  "startYear": 2014,
+  "fromChannels": [
+    {
+      "id": "C02S80MG3",
+      "name": "all_freetalk"
+    }
+  ],
+  "toChannel": {
+    "id": "C011BRX4GNQ",
+    "name": "zzz_omoide"
+  },
+  "messagesPerChannel": 3
+}
