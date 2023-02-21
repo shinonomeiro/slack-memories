@@ -1,8 +1,8 @@
+import { ChannelInfo, RawMessage, Message, PopularMessagesIndexed, YearData } from '../@types/global';
 import { WebClient } from '@slack/web-api';
 import { setYear, getUnixTime, addDays, addSeconds, format } from 'date-fns/fp';
-import { compose, map, reduce, add, sortBy, take, filter } from 'ramda';
+import { compose, sortBy, reverse, filter, take, map, reduce, add } from 'lodash/fp'
 import { stripIndents } from 'common-tags';
-import { ChannelInfo, SlackMessagePartial, MessageData, PopularMessagesIndexed, YearData } from '../@types/global';
 import * as config from '../config.json';
 
 export class TkrbOmoideBot {
@@ -21,15 +21,15 @@ export class TkrbOmoideBot {
     this.client = new WebClient(slackToken);
   }
 
-  setToday(date: Date) {
+  setToday = (date: Date) => {
     this.today = date;
   }
 
-  setStartYear(year: number) {
+  setStartYear = (year: number) => {
     this.startYear = year;
   }
 
-  setMessagesPerChannel(count: number) {
+  setMessagesPerChannel = (count: number) => {
     this.messagesPerChannel = count;
   }
 
@@ -41,23 +41,23 @@ export class TkrbOmoideBot {
   );
 
   private mapMessagesByReactionCount = (
-    map<SlackMessagePartial, MessageData>(message => ({
-      ts: message.ts,
+    map<RawMessage, Message>(message => ({
+      ts: message.ts || '',
       reactionCount: message.reactions
-        ? reduce((acc, reaction) => add(acc, reaction.count), 0, message.reactions)
+        ? reduce((total, reaction) => add(total, reaction.count ?? 0), 0, message.reactions)
         : 0,
     }))
   );
 
-  private filterMessagesByMostReacted = (limit: number) => (
-    // 各関数の引数の型 ＋ 最後に出力される値の型
-    compose<MessageData[], MessageData[], MessageData[], MessageData[], MessageData[]>(
-      sortBy(message => Number.parseFloat(message.ts)),
+  private filterMessagesByMostReacted = (limit: number) => {
+    return compose(
+      sortBy<Message>(message => Number.parseFloat(message.ts)),
       take(limit),
-      filter(message => message.reactionCount > 0),
-      sortBy(message => -message.reactionCount),
+      filter<Message>(message => message.reactionCount > 0),
+      reverse,
+      sortBy<Message>(message => message.reactionCount)
     )
-  );
+  }
 
   private fetchPastMostPopularMessages = async (fromChannels: ChannelInfo[]) => {
     const res: PopularMessagesIndexed = [];
@@ -87,12 +87,11 @@ export class TkrbOmoideBot {
           latest: sameDayOnThatYearEnd.toString(),
         });
   
-        if (ok) {
+        if (ok && messages) {
           const popularMessages = compose(
             this.filterMessagesByMostReacted(this.messagesPerChannel),
             this.mapMessagesByReactionCount,
-            // Slack が型を提供してくれていないので止むを得ず手元で定義 😭
-          )(messages as SlackMessagePartial[]);
+          )(messages);
   
           // そのチャンネルに注目の投稿が特になければスキップ
           if (popularMessages.length > 0) {
@@ -117,7 +116,7 @@ export class TkrbOmoideBot {
   private outputToConsole = (text: string) => {
     return new Promise(resolve => {
       console.log('Output: ', text);
-      resolve();
+      resolve(null);
     })
   };
 
