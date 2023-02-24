@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "start": "rm -rf build && yarn build && node build/src/app.js"
+    "start": "rm -rf build && yarn build && node build/src/app.js",
+    "test": "jest"
   },
   "dependencies": {
     "@slack/web-api": "^6.8.1",
