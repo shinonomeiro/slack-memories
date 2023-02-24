@@ -14,10 +14,12 @@
     "resolveJsonModule": true,
     "alwaysStrict": true,
     "strictNullChecks": true,
-    "outDir": "build"
+    "outDir": "build",
+    "esModuleInterop": true
   },
   "include": [
-    "src/**/*"
+    "src/**/*.ts",
+    "tests/**/*.ts"
   ],
   "exclude": [
     "node_modules"

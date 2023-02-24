@@ -1,28 +1,11 @@
-// 具体例は添付の sample.json を要参照
+import { Message as ConversationsHistoryResponseMessage } from '@slack/web-api/dist/response/ConversationsHistoryResponse';
 
-export interface ChannelInfo {
-  id: string,
-  name: string,
-}
+export type RawMessage = Pick<ConversationsHistoryResponseMessage, 'ts' | 'reactions'>
 
-export interface SlackMessagePartial {
-  ts: string,
-  reactions: { count: number }[],
-}
+export interface Message { ts: string, reactionCount: number }
 
-export interface MessageData {
-  ts: string,
-  reactionCount: number,
-}
+export type YearData = [number, Message[]]
 
-export type ChannelData = [
-  ChannelInfo,
-  MessageData[],
-]
+export interface ChannelInfo { id: string, name: string }
 
-export type YearData = [
-  number,
-  ChannelData[],
-]
-
-export type PopularMessagesIndexed = YearData[];
+export type PopularMessagesIndexed = [ChannelInfo, YearData[]];
