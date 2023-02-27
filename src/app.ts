@@ -16,7 +16,7 @@ const bot = new MemoriesBot(service);
   try {
     const toChannel = { id: toChannelID, name: toChannelName }
     const fromChannel = { id: fromChannelID, name: fromChannelName }
-    await bot.run(toChannel)(fromChannel);
+    await bot.run({ toChannel, fromChannel, date: new Date() });
   } catch (error) {
     console.error('Oops, an error has occurred: ', error);
     console.error('Terminated');

@@ -3,7 +3,7 @@ import { WebClient } from '@slack/web-api';
 import { fromUnixTime } from 'date-fns';
 import { compose } from 'lodash/fp';
 import MemoriesBot from '../src/bot';
-import { getMessagesFor, getPermalinkFor, today } from './mock-data';
+import * as mockData from './mock-data';
 
 jest.mock('@slack/web-api', () => ({
   WebClient: jest.fn().mockImplementation(() => ({
@@ -25,11 +25,11 @@ let postMessageMock = service.chat.postMessage as jest.Mock<typeof service.chat.
 beforeEach(() => {
   historyMock.mockImplementation(async options => {
     let date = compose(fromUnixTime, parseFloat)(options!.oldest!);
-    return { ok: true, messages: getMessagesFor(date.getFullYear()) };
+    return { ok: true, messages: mockData.getMessagesFor(date.getFullYear()) };
   });
   
   getPermalinkMock.mockImplementation(async options => {
-    const permalink = getPermalinkFor(options!.message_ts);
+    const permalink = mockData.getPermalinkFor(options!.message_ts);
     return { ok: true, permalink: permalink };
   });
   
@@ -40,24 +40,22 @@ afterEach(() => {
   historyMock.mockReset();
   getPermalinkMock.mockReset();
   postMessageMock.mockReset();
-
 });
 
 const bot = new MemoriesBot(service);
-bot.setToday(today)
 
 it("throws if any channel ID is an empty string", async () => {
   let fromChannel = { id: '', name: '' }
   let toChannel = { id: '', name: '' }
 
-  await expect(bot.run(toChannel)(fromChannel)).rejects.toThrow();
+  await expect(bot.run({ toChannel, fromChannel, date: mockData.today })).rejects.toThrow();
 });
 
 it("picks the messages with the most reactions for each year and posts them to the target channel", async () => {
   let fromChannel = { id: 'abc', name: '#from' }
   let toChannel = { id: 'def', name: '#to' }
 
-  await bot.run(toChannel)(fromChannel);
+  await bot.run({ toChannel, fromChannel, date: mockData.today });
   
   expect(postMessageMock).toHaveBeenCalledTimes(6);
   expect(postMessageMock).toHaveBeenNthCalledWith(1, { channel: 'def', text: '⭐️⭐️⭐️ Memories of #from for today ⭐️⭐️⭐️' });
@@ -74,7 +72,7 @@ it('has no memories to post for today', async () => {
   
   historyMock.mockImplementation(async () => ({ ok: true }));
 
-  await bot.run(toChannel)(fromChannel);
+  await bot.run({ toChannel, fromChannel, date: mockData.today });
   
   expect(postMessageMock).toHaveBeenCalledTimes(2);
   expect(postMessageMock).toHaveBeenNthCalledWith(1, { channel: 'def', text: '⭐️⭐️⭐️ Memories of #from for today ⭐️⭐️⭐️' });
