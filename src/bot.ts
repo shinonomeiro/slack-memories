@@ -6,40 +6,31 @@ import { stripIndents } from 'common-tags';
 import { WebClient } from '@slack/web-api';
 import * as config from '../config.json';
 
+export interface Options {
+  toChannel: ChannelInfo
+  fromChannel: ChannelInfo
+  date: Date
+}
+
 export default class MemoriesBot {
   private service: WebClient;
-
-  private today: Date = new Date(
-    new Date().getFullYear(),
-    new Date().getMonth(),
-    new Date().getDate(),
-  );
-
-  private startYear: number = config.startYear;
-  private messagesPerYear: number = config.messagesPerYear;
 
   constructor(service: WebClient) {
     this.service = service;
   }
 
-  setToday = (date: Date) => {
-    this.today = date;
-  };
-
-  setStartYear = (year: number) => {
-    this.startYear = year;
-  };
-
-  setMessagesPerYear = (count: number) => {
-    this.messagesPerYear = count;
-  };
-
-  run = (toChannel: ChannelInfo) => async (fromChannel: ChannelInfo) => {
+  run = async ({ toChannel, fromChannel, date }: Options) => {
     invariant(!isEmpty(fromChannel.id), "Source channel ID cannot be an empty string");
     invariant(!isEmpty(toChannel.id), "Target channel ID cannot be an empty string");
+    
+    const today = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
 
-    return this.fetchPastMostPopularMessages(fromChannel)
-      .then(this.buildMessage)
+    return this.fetchPastMostPopularMessages(fromChannel, today)
+      .then(this.buildMessage(today))
       .then(this.postMessage(toChannel));
   };
 
@@ -61,14 +52,14 @@ export default class MemoriesBot {
     );
   };
 
-  private fetchPastMostPopularMessages = async (fromChannel: ChannelInfo) => {
+  private fetchPastMostPopularMessages = async (fromChannel: ChannelInfo, today: Date) => {
     const res: PopularMessagesIndexed = [fromChannel, []];
     const [, yearData] = res;
 
-    for (let i = 1; i <= this.today.getFullYear() - this.startYear; i++) {
-      const year = this.today.getFullYear() - i;
-      const sameDayOnThatYearStart = setYear(year)(this.today);
-      const sameDayOnThatYearEnd = compose(addSeconds(-1), addDays(1), setYear(year))(this.today);
+    for (let i = 1; i <= today.getFullYear() - config.startYear; i++) {
+      const year = today.getFullYear() - i;
+      const sameDayOnThatYearStart = setYear(year)(today);
+      const sameDayOnThatYearEnd = compose(addSeconds(-1), addDays(1), setYear(year))(today);
 
       console.log([
         `Looking up popular messages from ${fromChannel.name}`,
@@ -83,7 +74,7 @@ export default class MemoriesBot {
 
       if (ok) {
         const popularMessages = compose(
-          this.filterMessagesByMostReacted(this.messagesPerYear),
+          this.filterMessagesByMostReacted(config.messagesPerYear),
           this.mapMessagesByReactionCount,
         )(messages);
 
@@ -93,6 +84,7 @@ export default class MemoriesBot {
 
         console.log(popularMessages.length > 0 ? ` ... ${popularMessages.length} message(s)` : ' ... none');
       } else {
+        // TODO: Retry on error
         throw Error(`Failed to fetch chat history: ${error}`);
       }
     }
@@ -100,7 +92,7 @@ export default class MemoriesBot {
     return res;
   };
 
-  private buildMessage = async (messagesByYear: PopularMessagesIndexed) => {
+  private buildMessage = (today: Date) => async (messagesByYear: PopularMessagesIndexed) => {
     const [fromChannel, yearData] = messagesByYear;
     const messagesToSend = [];
 
@@ -108,11 +100,11 @@ export default class MemoriesBot {
 
     for (let i = 0; i < yearData.length; i++) {
       const [year, messages] = yearData[i];
-      const yearCount = this.today.getFullYear() - year;
+      const yearCount = today.getFullYear() - year;
 
       if (messages.length > 0) {
         messagesToSend.push(stripIndents`
-          💭 ${yearCount} year${yearCount > 1 ? 's' : ''} ago, on ${compose(format('yyyy/MM/dd'), setYear(year))(this.today)}... 💭
+          💭 ${yearCount} year${yearCount > 1 ? 's' : ''} ago, on ${compose(format('yyyy/MM/dd'), setYear(year))(today)}... 💭
         `);
       }
 
@@ -136,6 +128,7 @@ export default class MemoriesBot {
       results
         .forEach((result, i) => {
           if (result.status == 'rejected') {
+            // TODO: Retry on error
             console.error(`Failed to get permalink for message ${messages[i].ts}, skipped. Reason: ${result.reason}`);
           }
         });
@@ -169,8 +162,9 @@ export default class MemoriesBot {
           text: messages[i],
         });
 
-        if (error) throw new Error(error.toString());
+        if (error) throw new Error(error);
       } catch (error) {
+        // TODO: Retry on error
         console.error(stripIndents`
           Failed to post to channel ${toChannel.name}, skipped. ${error}
           Message: ${message}
