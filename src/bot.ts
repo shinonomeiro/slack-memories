@@ -118,11 +118,15 @@ export default class MemoriesBot {
       );
 
       const permalinks = results
-        .reduce((links, result) => (
+        .reduce<string[]>((links, result) => {
           // Permalinks can be undefined it seems, no idea in what exact circumstances though
           // Maybe for deleted messages? However in our case we confirmed their existence in the previous step
-          result.status == 'fulfilled' ? [...links, result.value.permalink] : links
-        ), [])
+          if (result.status != 'fulfilled' || !result.value.permalink) {
+            return links;
+          }
+
+          return [...links, result.value.permalink];
+        }, [])
         .join('\n');
 
       results
