@@ -28,32 +28,34 @@ If there happen to be no memories for that day, the following messages are poste
 
 ## Environment
 
-The app/bot is assumed to be executed once a day at a fixed time, either manually or as a cron job.
+This app is setup to be deployed as a Firebase function. The scheduling is currently hardcoded to `0 10 * * *` (every day at 10 am) Japan time, but still modifiable after deployment using the Cloud Scheduler dashboard.
+
 The following environment variables are required for successful operation:
 
 ```zsh
 $ export SLACK_TOKEN=<access token for your Slack workspace>
+
 $ export FROM_CHANNEL_ID=<source channel id>
 $ export FROM_CHANNEL_NAME=<source channel name>
 $ export TO_CHANNEL_ID=<target channel id>
 $ export TO_CHANNEL_NAME=<target channel name>
 ```
 
+For security reasons, `SLACK_TOKEN` only must be set through Google Cloud's Secret Manager panel. The other variables are stored in `functions/.env` and automatically deployed along with the function.
+
 The channel IDs can be easily retrieved with the URL bar if you're on a browser. Just copy-paste the string after the last `/`.
 
 ![image](https://user-images.githubusercontent.com/97494405/221216941-e98122d3-7176-40fb-8afb-4f0a9afe81e5.png)
 
-Channel names for the env variables are purely arbitrary and only for a more user-friendly output, try to use the actual names.
+Channel names for the env variables are purely arbitrary and only for a more user-friendly output, but try to use the actual names.
 
+## Run function locally
 
-## Setup
-`yarn install`
+TODO
 
-## Build and run
-`yarn start`
+## Commands
 
-## Build only
-`yarn build`
+Refer to `scripts` in `functions/package.json`.
 
-## Run tests
+### Run tests
 `yarn test`

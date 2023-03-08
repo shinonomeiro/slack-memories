@@ -1,4 +1,5 @@
 import * as functions from 'firebase-functions';
+import 'firebase-functions/logger/compat';
 import { WebClient } from '@slack/web-api';
 import MemoriesBot from '../../src/bot';
 
