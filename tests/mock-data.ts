@@ -85,4 +85,6 @@ export function getPermalinkFor(ts: string) {
     case '200': return "link200";
     case '300': return "link300";
   }
+  
+  return "";
 }
