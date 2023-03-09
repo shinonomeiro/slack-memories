@@ -22,12 +22,6 @@ export function getMessagesFor(year: number): RawMessage[] {
       {
         ts: "3",
       },
-      {
-        ts: "4",
-        reactions: [
-          { name: "emojiA", count: 4 },
-        ],
-      },
     ];
   }
   
@@ -38,6 +32,10 @@ export function getMessagesFor(year: number): RawMessage[] {
       },
       {
         ts: "20",
+        files: [{}],
+      },
+      {
+        ts: "30",
       },
     ];
   }
@@ -61,6 +59,13 @@ export function getMessagesFor(year: number): RawMessage[] {
       {
         ts: "300",
       },
+      {
+        ts: "400",
+        reactions: [
+          { name: "emojiA", count: 2 },
+        ],
+        files: [{}]
+      },
     ];
   }
   
@@ -76,14 +81,15 @@ export function getPermalinkFor(ts: string) {
     case '1': return "link1";
     case '2': return "link2";
     case '3': return "link3";
-    case '4': return "link4";
 
     case '10': return "link10";
     case '20': return "link20";
+    case '30': return "link30";
 
     case '100': return "link100";
     case '200': return "link200";
     case '300': return "link300";
+    case '400': return "link400";
   }
   
   return "";

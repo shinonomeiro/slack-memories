@@ -57,13 +57,15 @@ it("picks the messages with the most reactions for each year and posts them to t
 
   await bot.run({ toChannel, fromChannel, date: mockData.today });
   
-  expect(postMessageMock).toHaveBeenCalledTimes(6);
+  expect(postMessageMock).toHaveBeenCalledTimes(8);
   expect(postMessageMock).toHaveBeenNthCalledWith(1, { channel: 'def', text: '⭐️⭐️⭐️ Memories of #from for today ⭐️⭐️⭐️' });
   expect(postMessageMock).toHaveBeenNthCalledWith(2, { channel: 'def', text: '💭 5 years ago, on 2018/01/01... 💭' });
-  expect(postMessageMock).toHaveBeenNthCalledWith(3, { channel: 'def', text: 'link200\nlink100' });
-  expect(postMessageMock).toHaveBeenNthCalledWith(4, { channel: 'def', text: '💭 7 years ago, on 2016/01/01... 💭' });
-  expect(postMessageMock).toHaveBeenNthCalledWith(5, { channel: 'def', text: 'link4\nlink2\nlink1' });
-  expect(postMessageMock).toHaveBeenNthCalledWith(6, { channel: 'def', text: '👋 And that\'s it for today! See you again tomorrow! 👋' });
+  expect(postMessageMock).toHaveBeenNthCalledWith(3, { channel: 'def', text: 'link400\nlink200\nlink100' });
+  expect(postMessageMock).toHaveBeenNthCalledWith(4, { channel: 'def', text: '💭 6 years ago, on 2017/01/01... 💭' });
+  expect(postMessageMock).toHaveBeenNthCalledWith(5, { channel: 'def', text: 'link20\nlink10\nlink30' });
+  expect(postMessageMock).toHaveBeenNthCalledWith(6, { channel: 'def', text: '💭 7 years ago, on 2016/01/01... 💭' });
+  expect(postMessageMock).toHaveBeenNthCalledWith(7, { channel: 'def', text: 'link2\nlink1\nlink3' });
+  expect(postMessageMock).toHaveBeenNthCalledWith(8, { channel: 'def', text: '👋 And that\'s it for today! See you again tomorrow! 👋' });
 });
 
 it('has no memories to post for today', async () => {

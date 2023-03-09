@@ -1,6 +1,6 @@
 import { ChannelInfo, RawMessage, Message, PopularMessagesIndexed } from '../@types/global';
 import { setYear, addDays, addSeconds, getUnixTime } from 'date-fns/fp';
-import { compose, sortBy, reverse, filter, take, map, reduce, add, isEmpty, toString } from 'lodash/fp'
+import { compose, filter, take, map, reduce, add, isEmpty, toString, partition, sortBy, reverse } from 'lodash/fp'
 import invariant from 'tiny-invariant';
 import { stripIndents } from 'common-tags';
 import { WebClient } from '@slack/web-api';
@@ -29,23 +29,35 @@ export default class MemoriesBot {
       .then(this.postMessage(toChannel));
   };
 
-  private mapMessagesByReactionCount = (
+  private mapMessages = (
     map<RawMessage, Message>(message => ({
       ts: message.ts || '', // Under what circumstances is this undefined? 🤔
       reactionCount: message.reactions
         ? reduce((total, reaction) => add(total, reaction.count ?? 0), 0, message.reactions)
         : 0,
+      hasFiles: !isEmpty(message.files ?? []),
     }))
   );
 
-  private filterMessagesByMostReacted = (limit: number) => {
-    return compose(
-      take(limit),
-      filter<Message>(message => message.reactionCount > 0),
-      reverse,
-      sortBy<Message>(message => message.reactionCount)
-    );
-  };
+  private sortMessagesByLevelOfInterest = (messages: Message[]) => (
+    compose(
+      ([withReactionsOrFiles, plain]) => [
+        ...compose(
+          reverse,
+          sortBy(message => message.reactionCount),
+          filter<Message>(message => message.hasFiles),
+        )(withReactionsOrFiles),
+        ...compose(
+          reverse,
+          sortBy(message => message.reactionCount),
+          filter<Message>(message => !message.hasFiles),
+        )(withReactionsOrFiles),
+        ...filter<Message>(message => message.hasFiles)(plain),
+        ...filter<Message>(message => !message.hasFiles)(plain),
+      ],
+      partition<Message>(message => message.reactionCount > 0),
+    )(messages)
+  );
 
   private fetchPastMostPopularMessages = async (fromChannel: ChannelInfo, date: Date) => {
     const res: PopularMessagesIndexed = [fromChannel, []];
@@ -69,8 +81,9 @@ export default class MemoriesBot {
 
       if (ok) {
         const popularMessages = compose(
-          this.filterMessagesByMostReacted(config.messagesPerYear),
-          this.mapMessagesByReactionCount,
+          take(config.messagesPerYear),
+          this.sortMessagesByLevelOfInterest,
+          this.mapMessages,
         )(messages);
 
         if (popularMessages.length > 0) {
