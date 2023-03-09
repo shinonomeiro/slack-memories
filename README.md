@@ -2,7 +2,12 @@
 
 Facebook Memories-like feature for any channel.
 
-A simple app that reposts once a day on a given channel messages that were sent on the very same day years past on another channel. Messages are filtered based on the number of reactions received, sorted in descending order, and the number of messages per year is configurable. Messages without any reactions are ignored.
+A simple app that reposts once a day on a given channel messages that were sent on the very same day years past on another channel. Messages are sorted based on the number of reactions received, and if they contain images. Then only the top `n` messages will be reposted, as configured in `config.json`. The selection criteria is as follows, in descending order of priority:
+
+1. Posts with reactions & images
+2. Posts with reactions
+3. Posts with images
+4. Plain posts
 
 Example output:
 ```
@@ -17,7 +22,7 @@ link5
 👋 And that's it for today! See you again tomorrow! 👋
 ```
 
-The links are expected to be auto-expanded by Slack, so there is no need to fetch the message content themselves.
+The fetched permalinks are expected to be unfurled by Slack, so there is no need to repost each message content itself.
 
 If there happen to be no memories for that day, the following messages are posted:
 
