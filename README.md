@@ -28,7 +28,7 @@ If there happen to be no memories for that day, the following messages are poste
 
 ## Environment
 
-This app is setup to be deployed as a Firebase function. The scheduling is currently hardcoded to `0 10 * * *` (every day at 10 am) Japan time, but still modifiable after deployment using the Cloud Scheduler dashboard.
+This app is setup to be deployed as a Firebase function. The scheduling is currently hardcoded to `0 10 * * *` (every day at 10 am), but still modifiable after deployment from the Cloud Scheduler dashboard. The timezone used both for the cron job and timestamps in the output messages to Slack can be set in `config.json`. The default is `Asia/Tokyo`.
 
 The following environment variables are required for successful operation:
 
@@ -42,6 +42,15 @@ $ export TO_CHANNEL_NAME=<target channel name>
 ```
 
 For security reasons, `SLACK_TOKEN` only must be set through Google Cloud's Secret Manager panel. The other variables are stored in `functions/.env` and automatically deployed along with the function.
+
+These are the three API endpoints used by the bot:
+- https://api.slack.com/methods/conversations.history
+- https://api.slack.com/methods/chat.getPermalink
+- https://api.slack.com/methods/chat.postMessage
+
+The required OAuth2 scopes are:
+- [channels:history](https://api.slack.com/scopes/channels:history)
+- [chat:write](https://api.slack.com/scopes/chat:write)
 
 The channel IDs can be easily retrieved with the URL bar if you're on a browser. Just copy-paste the string after the last `/`.
 

@@ -2,12 +2,13 @@ import * as functions from 'firebase-functions';
 import 'firebase-functions/logger/compat';
 import { WebClient } from '@slack/web-api';
 import MemoriesBot from '../../src/bot';
+import { timezone } from '../../config.json';
 
 export const postSlackMemories = functions
 .runWith({ secrets: ['SLACK_TOKEN'] })
 .pubsub
 .schedule('0 10 * * *')
-.timeZone('Japan')
+.timeZone(timezone)
 .onRun((async () => {
   console.log('Starting job');
 
@@ -19,13 +20,15 @@ export const postSlackMemories = functions
   const service = new WebClient(process.env.SLACK_TOKEN);
   const bot = new MemoriesBot(service);
   
-  const toChannel = { id: toChannelID, name: toChannelName }
-  const fromChannel = { id: fromChannelID, name: fromChannelName }
-  
+  const toChannel = { id: toChannelID, name: toChannelName };
+  const fromChannel = { id: fromChannelID, name: fromChannelName };
+
   try {
     await bot.run({ toChannel, fromChannel, date: new Date() });
+    console.log('Finished job');
   } catch (error) {
     console.error('Oops, an error has occurred: ', error);
     console.error('Terminated');
+    process.exitCode = 1;
   }
 }));
