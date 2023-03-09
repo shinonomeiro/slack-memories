@@ -1,8 +1,8 @@
 import { Message as ConversationsHistoryResponseMessage } from '@slack/web-api/dist/response/ConversationsHistoryResponse';
 
-export type RawMessage = Pick<ConversationsHistoryResponseMessage, 'ts' | 'reactions'>
+export type RawMessage = Pick<ConversationsHistoryResponseMessage, 'ts' | 'reactions' | 'files' >
 
-export interface Message { ts: string, reactionCount: number }
+export interface Message { ts: string, reactionCount: number, hasFiles: boolean }
 
 export type YearData = [number, Message[]]
 
