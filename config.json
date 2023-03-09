@@ -1,5 +1,6 @@
 {
   "startYear": 2015,
   "messagesPerYear": 3,
-  "throttle": 100
+  "throttle": 100,
+  "timezone": "Asia/Tokyo"
 }

@@ -1,9 +1,10 @@
 import { ChannelInfo, RawMessage, Message, PopularMessagesIndexed } from '../@types/global';
-import { setYear, addDays, addSeconds, format, getUnixTime } from 'date-fns/fp';
+import { setYear, addDays, addSeconds, getUnixTime } from 'date-fns/fp';
 import { compose, sortBy, reverse, filter, take, map, reduce, add, isEmpty, toString } from 'lodash/fp'
 import invariant from 'tiny-invariant';
 import { stripIndents } from 'common-tags';
 import { WebClient } from '@slack/web-api';
+import * as utils from './utils';
 import * as config from '../config.json';
 
 export interface Options {
@@ -23,14 +24,8 @@ export default class MemoriesBot {
     invariant(!isEmpty(fromChannel.id), "Source channel ID cannot be an empty string");
     invariant(!isEmpty(toChannel.id), "Target channel ID cannot be an empty string");
     
-    const today = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate()
-    );
-
-    return this.fetchPastMostPopularMessages(fromChannel, today)
-      .then(this.buildMessage(today))
+    return this.fetchPastMostPopularMessages(fromChannel, date)
+      .then(this.buildMessage(date))
       .then(this.postMessage(toChannel));
   };
 
@@ -52,18 +47,18 @@ export default class MemoriesBot {
     );
   };
 
-  private fetchPastMostPopularMessages = async (fromChannel: ChannelInfo, today: Date) => {
+  private fetchPastMostPopularMessages = async (fromChannel: ChannelInfo, date: Date) => {
     const res: PopularMessagesIndexed = [fromChannel, []];
     const [, yearData] = res;
 
-    for (let i = 1; i <= today.getFullYear() - config.startYear; i++) {
-      const year = today.getFullYear() - i;
-      const sameDayOnThatYearStart = setYear(year)(today);
-      const sameDayOnThatYearEnd = compose(addSeconds(-1), addDays(1), setYear(year))(today);
+    for (let i = 1; i <= date.getFullYear() - config.startYear; i++) {
+      const year = date.getFullYear() - i;
+      const sameDayOnThatYearStart = setYear(year)(date);
+      const sameDayOnThatYearEnd = compose(addSeconds(-1), addDays(1), setYear(year))(date);
 
       console.log([
         `Looking up popular messages from ${fromChannel.name}`,
-        `on ${format('yyyy/MM/dd', sameDayOnThatYearStart)}`,
+        `on ${utils.formatInTimeZone(config.timezone, 'yyyy/MM/dd')(sameDayOnThatYearStart)}`,
       ].join(' '));
 
       const { ok, error, messages = [] } = await this.service.conversations.history({
@@ -92,7 +87,7 @@ export default class MemoriesBot {
     return res;
   };
 
-  private buildMessage = (today: Date) => async (messagesByYear: PopularMessagesIndexed) => {
+  private buildMessage = (date: Date) => async (messagesByYear: PopularMessagesIndexed) => {
     const [fromChannel, yearData] = messagesByYear;
     const messagesToSend = [];
 
@@ -100,11 +95,11 @@ export default class MemoriesBot {
 
     for (let i = 0; i < yearData.length; i++) {
       const [year, messages] = yearData[i];
-      const yearCount = today.getFullYear() - year;
+      const yearCount = date.getFullYear() - year;
 
       if (messages.length > 0) {
         messagesToSend.push(stripIndents`
-          💭 ${yearCount} year${yearCount > 1 ? 's' : ''} ago, on ${compose(format('yyyy/MM/dd'), setYear(year))(today)}... 💭
+          💭 ${yearCount} year${yearCount > 1 ? 's' : ''} ago, on ${compose(utils.formatInTimeZone(config.timezone, 'yyyy/MM/dd'), setYear(year))(date)}... 💭
         `);
       }
 
