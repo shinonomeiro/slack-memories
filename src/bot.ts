@@ -41,19 +41,19 @@ export default class MemoriesBot {
 
   private sortMessagesByLevelOfInterest = (messages: Message[]) => (
     compose(
-      ([withReactionsOrFiles, plain]) => [
+      ([withReactions, withoutReactions]) => [
         ...compose(
           reverse,
           sortBy(message => message.reactionCount),
           filter<Message>(message => message.hasFiles),
-        )(withReactionsOrFiles),
+        )(withReactions),
         ...compose(
           reverse,
           sortBy(message => message.reactionCount),
           filter<Message>(message => !message.hasFiles),
-        )(withReactionsOrFiles),
-        ...filter<Message>(message => message.hasFiles)(plain),
-        ...filter<Message>(message => !message.hasFiles)(plain),
+        )(withReactions),
+        ...filter<Message>(message => message.hasFiles)(withoutReactions),
+        ...filter<Message>(message => !message.hasFiles)(withoutReactions),
       ],
       partition<Message>(message => message.reactionCount > 0),
     )(messages)
