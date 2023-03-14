@@ -1,5 +1,5 @@
 import { ChannelInfo, RawMessage, Message, PopularMessagesIndexed } from '../@types/global';
-import { setYear, addDays, addSeconds, getUnixTime } from 'date-fns/fp';
+import { setYear, getUnixTime, startOfDay, endOfDay } from 'date-fns/fp';
 import { compose, filter, take, map, reduce, add, isEmpty, toString, partition, sortBy, reverse } from 'lodash/fp'
 import invariant from 'tiny-invariant';
 import { stripIndents } from 'common-tags';
@@ -65,8 +65,8 @@ export default class MemoriesBot {
 
     for (let i = 1; i <= date.getFullYear() - config.startYear; i++) {
       const year = date.getFullYear() - i;
-      const sameDayOnThatYearStart = setYear(year)(date);
-      const sameDayOnThatYearEnd = compose(addSeconds(-1), addDays(1), setYear(year))(date);
+      const sameDayOnThatYearStart = compose(startOfDay, setYear(year))(date);
+      const sameDayOnThatYearEnd = endOfDay(sameDayOnThatYearStart);
 
       console.log([
         `Looking up popular messages from ${fromChannel.name}`,
