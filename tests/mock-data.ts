@@ -37,6 +37,13 @@ export function getMessagesFor(year: number): RawMessage[] {
       {
         ts: "30",
       },
+      {
+        ts: "40",
+        subtype: "channel_join",
+        reactions: [
+          { name: "emojiA", count: 10 },
+        ]
+      }
     ];
   }
   
@@ -85,6 +92,7 @@ export function getPermalinkFor(ts: string) {
     case '10': return "link10";
     case '20': return "link20";
     case '30': return "link30";
+    case '40': return "link40";
 
     case '100': return "link100";
     case '200': return "link200";
