@@ -28,6 +28,12 @@ export default class MemoriesBot {
       .then(this.buildMessage(date))
       .then(this.postMessage(toChannel));
   };
+  
+  private discardChannelJoinLeaveEvents = (
+    filter<RawMessage>(message => (
+      !message.subtype?.match(/channel_join|channel_leave/)
+    ))
+  );
 
   private mapMessages = (
     map<RawMessage, Message>(message => ({
@@ -84,6 +90,7 @@ export default class MemoriesBot {
           take(config.messagesPerYear),
           this.sortMessagesByLevelOfInterest,
           this.mapMessages,
+          this.discardChannelJoinLeaveEvents,
         )(messages);
 
         if (popularMessages.length > 0) {
